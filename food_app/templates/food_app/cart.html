@@ -1,0 +1,49 @@
+{% extends "food_app/base.html" %}
+{% load static %}
+
+{% block title %}Cart{% endblock %}
+
+{% block content %}
+<h2>Your Cart</h2>
+
+<div class="card p-3">
+
+{% if cart_items %}
+<div class="table-responsive">
+  <table class="table align-middle">
+    <thead class="table-light">
+      <tr>
+        <th>Product</th>
+        <th>Qty</th>
+        <th>Price</th>
+        <th></th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {% for item in cart_items %}
+      <tr>
+        <td>{{ item.product.name }}</td>
+        <td>{{ item.quantity }}</td>
+        <td>₹{{ item.product.price }}</td>
+        <td>
+          <a href="{% url 'remove_from_cart' item.product.id %}" class="btn btn-sm btn-danger">Remove</a>
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+
+  </table>
+</div>
+
+<div class="text-end mt-3">
+  <h4>Total: ₹{{ total_price }}</h4>
+  <a href="{% url 'checkout' %}" class="btn btn-primary">Checkout</a>
+</div>
+
+{% else %}
+<p class="text-muted">Your cart is empty.</p>
+{% endif %}
+
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "food_app/base.html" %}
+{% load static %}
+
+
+{% block title %}Home - FastFood{% endblock %}
+
+{% block content %}
+
+<div class="row align-items-center mb-5">
+  <div class="col-md-6">
+    <h1 class="display-5 fw-bold mb-3">Welcome to FastFood</h1>
+    <p class="lead text-muted">Hot & fresh meals delivered fast.</p>
+    <a href="{% url 'product_list' %}" class="btn btn-primary btn-lg">Explore Menu</a>
+  </div>
+
+  <div class="col-md-6 text-center">
+    <img src="{% static 'img/hero-food.png' %}" class="img-fluid rounded shadow-lg" style="max-height:330px;">
+  </div>
+</div>
+
+<h3 class="fw-semibold mb-3">Featured</h3>
+
+<div class="row g-3">
+  {% for p in products %}
+  <div class="col-6 col-md-3">
+    <div class="card h-100 border-0">
+      <img src="{{ p.image.url }}" class="product-image">
+
+      <div class="card-body text-center">
+        <h6 class="fw-bold">{{ p.name }}</h6>
+        <p class="text-muted small">₹ {{ p.price }}</p>
+
+        <div class="d-flex gap-2">
+          <a href="{% url 'product_detail' p.id %}" class="btn btn-outline-primary w-50">View</a>
+
+          <form method="post" action="{% url 'add_to_cart' p.id %}" class="w-50">
+            {% csrf_token %}
+            <button class="btn btn-primary w-100">Add</button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% endblock %}
