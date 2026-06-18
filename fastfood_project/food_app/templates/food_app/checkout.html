@@ -1,0 +1,180 @@
+{% extends "food_app/base.html" %}
+{% load static %}
+
+{% block title %}Checkout{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Checkout</h2>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="row">
+        <div class="col-md-8">
+            {% if cart_items %}
+                <!-- Order Items -->
+                <div class="card mb-4">
+                    <div class="card-header bg-dark text-white">
+                        <h5 class="mb-0">Order Items</h5>
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group">
+                            {% for item in cart_items %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ item.product.name }} <strong>x{{ item.quantity }}</strong></span>
+                                <span class="badge badge-primary badge-pill">₹{{ item.item_total }}</span>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- Delivery Address Selection -->
+                <div class="card mb-4">
+                    <div class="card-header bg-info text-white">
+                        <h5 class="mb-0">Select Delivery Address</h5>
+                    </div>
+                    <div class="card-body">
+                        {% if delivery_addresses %}
+                            <form method="post" action="{% url 'place_order' %}">
+                                {% csrf_token %}
+                                
+                                <div class="form-group">
+                                    <label for="delivery_address">Choose Delivery Address:</label>
+                                    <select name="delivery_address" id="delivery_address" class="form-control" required>
+                                        <option value="">-- Select Address --</option>
+                                        {% for address in delivery_addresses %}
+                                        <option value="{{ address.id }}" {% if default_address.id == address.id %}selected{% endif %}>
+                                            {{ address.street_address }}, {{ address.city }} 
+                                            {% if address.is_default %}<strong>(Default)</strong>{% endif %}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                    <small class="form-text text-muted">
+                                        Don't have a delivery address? <a href="{% url 'add_delivery_address' %}" target="_blank">Add one now</a>
+                                    </small>
+                                </div>
+
+                                <!-- Address Preview -->
+                                <div id="address-preview" class="alert alert-light" style="display: none;">
+                                    <strong>Address Details:</strong>
+                                    <p id="address-details"></p>
+                                </div>
+
+                                <div class="text-right">
+                                    <button type="submit" class="btn btn-success btn-lg" id="place-order-btn">
+                                        Place Order & Download Invoice
+                                    </button>
+                                </div>
+                            </form>
+                        {% else %}
+                            <div class="alert alert-warning">
+                                <p>You need to add a delivery address before placing an order.</p>
+                                <a href="{% url 'add_delivery_address' %}" class="btn btn-primary">Add Delivery Address</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-info">
+                    <p>Your cart is empty.</p>
+                    <a href="{% url 'menu' %}" class="btn btn-primary">Continue Shopping</a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Order Summary Sidebar -->
+        <div class="col-md-4">
+            <div class="card sticky-top" style="top: 20px;">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Order Summary</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Subtotal:</strong> ₹{{ total_price }}</p>
+                    <p><strong>Delivery Fee:</strong> ₹0 (Free)</p>
+                    <hr>
+                    <h4><strong>Total:</strong> ₹{{ total_price }}</h4>
+                </div>
+            </div>
+
+            <!-- Delivery Address Management -->
+            <div class="card mt-3">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="mb-0">Delivery Addresses</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for address in delivery_addresses %}
+                            <a href="#" class="list-group-item list-group-item-action {% if default_address.id == address.id %}active{% endif %}" onclick="selectAddress({{ address.id }})">
+                                <small>
+                                    {{ address.street_address }}<br>
+                                    {{ address.city }}
+                                    {% if address.is_default %}<br><strong class="text-success">Default</strong>{% endif %}
+                                </small>
+                            </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <a href="{% url 'delivery_addresses' %}" class="btn btn-sm btn-link" target="_blank">Manage Addresses</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('delivery_address').addEventListener('change', function() {
+        const select = document.getElementById('delivery_address');
+        const selectedOption = select.options[select.selectedIndex];
+        const preview = document.getElementById('address-preview');
+        
+        if (select.value) {
+            // Parse address text from option
+            const text = selectedOption.text;
+            document.getElementById('address-details').innerHTML = text;
+            preview.style.display = 'block';
+        } else {
+            preview.style.display = 'none';
+        }
+    });
+
+    function selectAddress(addressId) {
+        document.getElementById('delivery_address').value = addressId;
+        document.getElementById('delivery_address').dispatchEvent(new Event('change'));
+    }
+
+    // Initialize on page load
+    window.addEventListener('load', function() {
+        if (document.getElementById('delivery_address').value) {
+            document.getElementById('delivery_address').dispatchEvent(new Event('change'));
+        }
+    });
+</script>
+
+<style>
+    .container {
+        max-width: 1200px;
+    }
+    .card {
+        border-left: 4px solid #007bff;
+    }
+    .form-control {
+        padding: 0.75rem;
+    }
+    .list-group-item.active {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+</style>
+{% endblock %}
+
